@@ -33,21 +33,33 @@ def show_progress(rewards_batch: torch.Tensor, log: list,
         None
     """
 
-    mean_reward =  # средняя награда
-    threshold =  # порог награды
+    mean_reward =  np.mean(rewards_batch)
+    threshold =  np.percentile(rewards_batch, percentile)
 
     print("средняя награда = %.3f, порог = %.3f" % (mean_reward, threshold))
 
     ##########################
-    # график с историей порогов наград и средних вознаграждений в зависимости от номера итеркции обучения
+    # график с историей порогов наград и средних вознаграждений в зависимости от номера итерации обучения
     ##########################
     plt.subplot(1, 2, 1)
+    plt.plot([x[0] for x in log], label='mean reward')
+    plt.plot([x[1] for x in log], label=f'{percentile} percentile')
+    plt.title("ggg")
+    plt.xlabel("iteration")
+    plt.ylabel("reward")
+
     # your code here
 
     ##########################
-    # гистограма с распределением вознаграждений за сессию и уровнем выбранного перцентиля
+    # гистограмма с распределением вознаграждений за сессию и уровнем выбранного перцентиля
     ##########################
     plt.subplot(1, 2, 2)
+    plt.hist(rewards_batch, range=reward_range, bins=20)
+    plt.axvline(threshold, color='r', linestyle='--', label='percentile threshold')
+    plt.title("ggg")
+    plt.xlabel("iteration")
+    plt.ylabel("reward")
+
     # your code here
 
     clear_output(True)
@@ -117,17 +129,23 @@ class GYMAgentWrapper():
         Return:
             tuple: (elite_states, elite_actions) - отобранные состояния и действия.
         """
-        reward_threshold =  # порог наград, расчитывается с помощью перцентиля
+        reward_threshold = np.percentile(rewards_batch, percentile)  # порог наград, расчитывается с помощью перцентиля
 
         elite_states = []
         elite_actions = []
 
         ##########################
         # отбор states и actions, при которых награда больше заданного перцентиля.
-        # при strict == True, отобранны должны быть только states и actions с вознограждением > перцентиля
-        # при strict == False, отобранны должны быть только states и actions с вознограждением >= перцентиля
+        # при strict == True, отобраны должны быть только states и actions с вознаграждением > перцентиля
+        # при strict == False, отобраны должны быть только states и actions с вознаграждением >= перцентиля
         ##########################
-        # your code here
+
+        elite_states, elite_actions = [], []
+        for states, actions, reward in zip(states_batch, actions_batch, rewards_batch):
+            if (strict and (reward > reward_threshold)) or (not strict and (reward >= reward_threshold)):
+                elite_states.extend(states)
+                elite_actions.extend(actions)
+        
 
         return elite_states, elite_actions
 
@@ -349,9 +367,14 @@ class GYMAgentWrapper():
                     # смотри joblib.Parallel и joblib.delayed
                     # настоятельно рекомендуем использовать generate_session_wrapper staticmethod для возможности сереализации процесса, иначе велика вероятность что код не запустится
                     ##########################
-                sessions.extend(
-                    # your code here
-                )
+                    env_name = self.gym_env.spec.id
+                    new_sessions = Parallel(n_jobs=n_workers)(
+                        delayed(self.generate_session_wrapper)(
+                            self, self.session_params, env_name
+                        )
+                        for _ in range(self.train_agent_params.session_quantity)
+                    )
+                sessions.extend(new_sessions)
             else:
                 raise ValueError("quantity of workers can't be less that 1")
 

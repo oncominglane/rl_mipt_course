@@ -30,9 +30,14 @@ class MLPBaseModel(nn.Module):
         ##########################
 
         # your code here
+        dims = [input_dim] + inner_dims + [output_dim]
+        layers = []
+        for i in range(len(dims) - 1):
+            layers.append(nn.Linear(dims[i], dims[i+1]))
+            if i != len(dims) - 2: layers.append(activation_func)
+
+        self.layers = nn.Sequential(*layers )
         # после реализации убрать строчку ниже с прокидыванием ошибки
-        raise NotImplementedError(
-            "please implement this section of the programme")
 
     def _reset_params(self):
         """
@@ -145,6 +150,7 @@ class MLPBaseWrapper(ABC, nn.Module):
     def partial_fit(self, inputs, targets):
         raise NotImplementedError(
             'this method is abstract, please override it')
+
 
     @abstractmethod
     def get_task(self):
@@ -264,10 +270,12 @@ class MLPClassifierModel(MLPBaseWrapper):
         ##########################
 
         # your code here
+        self.optimizer.zero_grad()
+        logits = self.model(inputs)
+        loss = self.loss_fn(logits, targets)
+        loss.backward()
+        self.optimizer.step()
         # после реализации убрать строчку ниже с прокидыванием ошибки
-        raise NotImplementedError(
-            "please implement this section of the programme")
-
         return loss.item()
 
     @property
