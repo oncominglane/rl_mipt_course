@@ -202,10 +202,11 @@ class MLPRegressorModel(MLPBaseWrapper):
         # для этого нужно получить предсказание модели на inputs, после получить лосс и прокинуть его (loss.backward()) и сделать шаг оптимайзера
         ##########################
 
-        # your code here
-        # после реализации убрать строчку ниже с прокидыванием ошибки
-        raise NotImplementedError(
-            "please implement this section of the programme")
+        self.optimizer.zero_grad()
+        predictions = self.model(inputs)
+        loss = self.loss_fn(predictions, targets)
+        loss.backward()
+        self.optimizer.step()
 
         return loss.item()
 

@@ -1,0 +1,22 @@
+включил нормализацию, вот запускаю с разным набором параметров - ничего не помогает
+
+acrobot.set_train_agent_params(train_steps=100, session_quantity=150, percentile=60, goal_score=-75, history_length = 2, verbose=True)  и lr=1e-3, 
+средняя награда = -84.237, порог=-74.000
+
+acrobot.set_train_agent_params(train_steps=100, session_quantity=150, percentile=60, goal_score=-75, history_length = 2, verbose=True)  и lr=3e-3, 
+средняя награда = -82.830, порог=-73.000
+
+acrobot.set_train_agent_params(train_steps=100, session_quantity=150, percentile=60, goal_score=-75, history_length = 2, verbose=True)  и lr=5e-4, 
+средняя награда = -82.857, порог=-77.000
+
+
+acrobot.set_train_agent_params(train_steps=200, session_quantity=150, percentile=60, goal_score=-75, history_length = 2, verbose=True)  и lr=3e-3, 
+средняя награда = -86.430, порог=-73.000
+от увеличения количества итераций обучения смысла нет, он просто выходит на плато примерно на 20-30й итерации и дальше ничего не меняется
+
+acrobot.set_train_agent_params(train_steps=100, session_quantity=250, percentile=60, goal_score=-75, history_length = 2, verbose=True) и lr=1e-3, 
+средняя награда = -89.800, порог=-73.000
+
+
+
+
