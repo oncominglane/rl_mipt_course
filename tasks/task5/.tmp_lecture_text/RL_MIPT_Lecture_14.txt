@@ -1,0 +1,1971 @@
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Лекция 14
+Обучение с подкреплением
+
+Варвара Руденко, Никита Юдин iudin.ne@phystech.edu
+Московский физико-технический институт
+Физтех-школа прикладной математики и информатики
+
+7 мая 2026
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+1 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Multi-Armed Bandit Problem
+
+• Задача многорукого бандита: агент выбирает действие согласно
+политике π(a) и получает награду за каждый эпизод. Формально
+задача сводится к MDP, зависящем только от выбора действия:
+Q(a) = Ep(r |a) [r ] ,
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+V ∗ = max {Q(a)} .
+a∈A
+
+7 мая 2026
+
+2 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Multi-Armed Bandit Problem
+• Стратегия меняется каждый эпизод: на k-ом эпизоде
+сэмплируется ak ∼ πk (a) и награда rk ∼ p(r | ak ), политика
+обновляется в πk+1 .
+• Для T итераций: оптимально было бы выбирать каждый раз
+действие, дающее максимальную награду => TV ∗ . Учитвывая,
+что не всегда будет выбрано лучшее действие, вводится функция
+потерь (regret) ℜ:
+T −1
+
+ℜT = TV ∗ − ∑ Q(ak ).
+k=0
+
+• Тогда целью задачи является минимизация функции R.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+3 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Exploration-exploitation dilemma
+
+• На каждой итерации делается выбор: следует агенту проверить
+новую "руку" (exploration) или продолжать "играть с той же
+рукой" (exploitation).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+4 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Простое решение
+• Можно оценить Q(a) по Монте-Карло:
+k
+
+∑ ri [ai = a]
+
+,
+Qk (a) = i=0k
+∑ [ai = a]
+i=0
+
+
+Qk (ak ) =
+
+1
+1−
+nk (ak )
+
+
+Q k − 1 ( ak ) +
+
+1
+rk =
+nk (ak )
+
+1
+= Q k − 1 ( ak ) +
+(rk − Qk −1 (ak )) ,
+nk (ak )
+
+(1)
+
+где nk (a) - счетчик, сколько раз было выбрано действие a за
+первые k + 1 итераций.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+5 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+• Утверждение: При любом алгоритме скорость роста сожалений не
+более чем линейная: для некоторой константы C :
+h i
+E ℜT ≤ CT .
+• Утверждение: При жадном выборе сожаления растут с линейной
+скоростью: для некоторой константы C :
+h i
+E ℜT ≥ CT .
+• Наивное решение — решать проблему "исследования" при
+помощи ε-жадной стратегии:
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+6 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Наивный бандит
+Алгоритм 1: Наивный бандит
+Гиперпараметры:
+ε(k) — стратегия
+Инициализировать Q0 (a) произвольно.
+Обнулить счётчики n0 (a) := 0.
+На очередном шаге k:
+1
+
+исследования.
+
+выбрать ak случайно с вероятностью ε(k), иначе
+ak := argmax Qk (ak );
+ak ∈A
+
+2
+
+увеличить счётчик nk (a) := nk −1 (a) + [ak = a];
+
+пронаблюдать rk ;
+1
+4 обновить Qk (a) := Qk −1 (a) + [ak = a] n (a) (rk − Qk −1 (a)).
+3
+
+k
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+7 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+• Утверждение: При ε-жадном выборе сожаления всё равно растут с
+линейной скоростью: для некоторой константы C :
+h i
+E ℜT ≥ CT .
+ε
+Доказательство. Поскольку на каждом шаге с вероятностью |A|
+мы выбираем некоторое неоптимальное действие a с ненулевым
+регретом V ∗ − Q(a), в среднем регрете появится слагаемое
+ε
+T |A|
+(V ∗ − Q(a)), следовательно как минимум можно в качестве
+ε
+константы C выбрать |A|
+(V ∗ − Q(a)).
+■
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+8 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Нестационарный бандит
+Нестационарных бандитов отличает возможность того, что
+распределения p(r | a) тоже меняются со временем. Наивное решение:
+
+• ε нельзя уменьшать к нулю, необходимо постоянно пробовать
+различные действия, поэтому можно выставить ε в константу.
+• Вместо счётчиков обновлять информацию о Q-функции через
+экспоненциальное сглаживание:
+Qk (ak ) = Qk −1 (ak ) + α (rk − Qk −1 (ak )) ,
+где 0 < α < 1 — константный гиперпараметр.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+9 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Теорема Лаи-Роббинса
+• Можно переписать функцию регрета в виде:
+ℜT = ∑ nT −1 (a)(V ∗ − Q(a)).
+a∈A
+
+Theorem (Теорема Лаи-Роббинса (Lai-Robbins theorem))
+h i
+V ∗ − Q(a)
+E ℜT ≥ ln T ∑
+KL(p(· | a) ∥ p(· | a∗ ))
+a∈A,a̸=a∗
+
+• Алгоритм асимптотически оптимален, если он имеет
+логарифмическую скорость роста среднего регрета.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+10 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Upper Confidence Bound (UCB)
+
+• Вводится семейство алгоритмов: на очередном шаге k
+выбирается действие:
+ak := argmax [Qk (a) + Uk (a)] ,
+a∈A
+
+где Uk (a) — некоторая положительная добавка, имеющая смысл
+бонуса за исследования (exploration bonus). Бонус положителен
+из принципа оптимизма перед неопределённостью (optimism
+in the face of uncertainty).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+11 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Upper Confidence Bound (UCB)
+
+• Идея upper confidence bounds (UCB) алгоритмов следующая:
+Q(a) ≤ Qk (a) + Uk (a).
+
+• То есть: строится доверительный интервал (confidence interval)
+и берется его верхняя граница. Uk (a) будет обратно
+пропорционален nk (a), ведь граница будет сжиматься к
+эмпирическому среднему.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+12 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Upper Confidence Bound (UCB)
+
+Theorem (Неравенство Хёфдинга)
+Пусть X1 . . . Xn — i.i.d выборка из распределения на доменеa [0, 1] с
+истинным средним µ, µ̂ := N1 ∑N
+i=1 Xi — выборочная оценка среднего.
+Тогда ∀u > 0:
+2
+P(µ ≥ µ̂ + u) ≤ e −2nu .
+a мы всегда предполагаем ограниченность наград; для удобства записи будем
+
+считать, что диапазон награды — [0, 1].
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+13 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Upper Confidence Bound (UCB)
+Утверждение: Для любого δ с вероятностью 1 − δ истинное значение
+Q(a) не превосходит Qk (a) + Uk (a), где:
+s
+− ln δ
+Uk (a) :=
+.
+2nk (a)
+Доказательство. В силу неравенства Хёфдинга:
+2
+
+P(Q(a) ≥ Qk (a) + Uk (a)) ≤ exp−2nk (a)Uk (a) .
+2
+
+Возьмём заданное δ и прогарантируем, что exp−2nk (a)Uk (a) = δ.
+Разрешая это равенство относительно Uk (a), получаем
+доказываемое.
+s
+"
+#
+ln k
+ak = argmax Qk (a) + c
+.
+nk (a)
+a∈A
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+■
+
+14 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Сэмплирование Томпсона
+• Предположение: распределения наград p(r | a) принадлежат
+некоторому параметрическому семейству θa ∈ Θ, награда
+генерируется из распределения p(r | θa ).
+• Предлагается байесовский вывод: Зададимся некоторым
+априорным распределением («прайором») p(θa ) для каждого
+действия a и после очередного эпизода игры с автоматом a с
+исходом rk будем обновлять распределение над θa по формуле
+Байеса на апостериорное распределение:
+p(θa ) ← p(θa | rk ) ∝ p(rk | θa )p(θa ).
+
+• Средний выигрыш из автомата a – E [p(r | θa )], теперь будет
+являться случайной величиной, поскольку θa — случайное, с
+распределением p(θa ).
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+15 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Сэмплирование Томпсона
+• Probability matching: Согласно текущим p(θa ) жадный выбор
+действия имеет вид:
+
+a := argmax Eθa ∼p(θa ) [E [p(r | θa )]] .
+a∈A
+
+• Появляется вероятность неоптимального действия, то есть с
+учётом распределений θa посчитать вероятность, что хотя бы для
+одного другого автомата â ̸= a:
+E [p(r | θâ )] > E [p(r | θa )] .
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+16 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Сэмплирование Томпсона
+
+Сэмплирование Томпсона (Thompson Sampling) – процедура, при
+которой на k-ом шаге при решении задачи многоруких бандитов
+действие a выбирается с вероятностью того, что оно оптимально в
+рамках выученных моделей p(θa ):
+
+
+π(a) := P E [p(r | θa )] = max {E [p(r | θâ )]} .
+â∈A
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+17 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Bernoulli-бандиты
+Положим, что автоматы выдают только награду 0 или 1 –
+распределение Бернулли с вероятностью θa :
+I[r =1]
+
+p(r | a) := Bernoulli(r | θa ) = θa
+
+(1 − θa )I[r =0] = θar (1 − θa )1−r .
+
+Априорное распределение зададим при помощи Бета-распределения1 :
+p(θa ) := Beta(θa | α, β) ∝ θaα−1 (1 − θa )β−1 ,
+где α и β — некоторые параметры (свои для каждого автомата a). Мы
+можем обновлять эти знания при помощи новых сэмплов rk ∼ p(r | a),
+проводя байесовский вывод. Применяем формулу Байеса:
+p(θa | r ) ∝ θark (1 − θa )1−rk θaα−1 (1 − θa )α−1 = Beta(θa | α + rk , β + 1 − rk ).
+{z
+}|
+{z
+}
+|
+p(rk |θa )
+
+p(θa )
+
+1 это распределение является сопряжённым (conjugate) к Бернулли
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+18 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Bernoulli-бандиты
+
+Для обновления параметров α, β достаточно увеличить α на rk , а β —
+на 1 − rk . При заданном θa мы можем посчитать среднее значение
+выигрыша, ценность автомата a:
+Q̂(a) = E [p(r | θa )] = θa .
+Математическое ожидание выигрыша в нашей модели:
+
+
+Eθa Q̂(a) = EBeta(θa |α,β) [θa ] =
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+α
+.
+α+β
+
+7 мая 2026
+
+19 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Bernoulli-бандиты
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+20 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Планирование
+• Для данного состояния s0 набор действий a0 , a1 , a2 , . . . – план
+(plan).
+• Допустим агент находится в некотором s0 и хочет найти хорошее
+действие a0 , после чего сэмплируется s1 , выбирается a1 =>
+строится план. Но подобные алгоритмы могут «спланировать»
+свои будущие действия, а не выучить непосредственно
+зависимость π(a | s) («обучить стратегию»).
+• При доступной функции переходов p(s ′ | s, a) и функции награды
+R(·) по траектории T такая задача называется планированием
+(planning).
+
+argmax
+ET |s0 ,a0 ,a1 ,... [R(T )] .
+(a0 ,a1 ,... )∈A∞
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+21 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+World Models
+• Моделью мира (world model) называется любая модель, явно
+или неявно обучающаяся модели динамики среды.
+Алгоритм 2: Общая схема Model-based подхода
+Гиперпараметры: Планировщик, модель мира.
+Проинициализировать стратегию π0 (a | s), модель мира
+случайно, проинициализировать датасет пустым множеством.
+На k-ом шаге:
+1
+
+Повзаимодействовать со средой при помощи πk , добавив
+встреченные переходы {s, a, r , s ′ } в датасет.
+
+2
+
+Провести дообучение модели мира на собранном датасете.
+
+3
+
+Получить πk из планировщика, используя текущую модель
+мира.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+22 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Модель прямой динамики
+• Модель функции переходов pθ (s ′ | a, s) называется моделью
+прямой динамики (forward dynamics model).
+• Учить генеративную модель может быть дороговато, и простым
+удешевлением является обучение детерминированного
+приближения s ′ ≈ fθ (a, s). Это можно делать по любым
+доступным траекториям, собранным любым способом:
+;
+∑ ′ ∥fθ (a, s) − s ′ ∥2 → min
+θ
+
+s,a,s
+
+∑ rψ (s, a) − r
+
+s,a,r
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+2
+
+→ min .
+ψ
+
+7 мая 2026
+
+23 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Сновидения
+
+• Наличие модели прямой динамики pθ (s ′ , r | a, s) позволяет при
+помощи текущей стратегии π генерировать траектории, используя
+полностью «внутренние модели» и никак не используя реальную
+внешнюю среду.
+• Сновидениями (dreaming) называется обучение агента на опыте,
+собранном при помощи приближения динамики среды
+pθ (s ′ , r | a, s).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+24 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Интересные результаты
+
+• Optimistic Posterior Sampling for Reinforcement Learning with Few
+Samples and Tight Guarantees by Daniil Tiapkin, Denis Belomestny et
+al. (2022)
+• From Dirichlet to Rubin: Optimistic Exploration in RL without
+Bonuses by Daniil Tiapkin, Denis Belomestny et al. (2022)
+• Federated UCBVI: Communication-Efficient Federated Regret
+Minimization with Heterogeneous Agents by Safwan Labbi, Daniil
+Tiapkin et al.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+25 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Optimistic Posterior Sampling for Reinforcement
+Learning with Few Samples and Tight Guarantees
+• Reinforcement learning in an environment modeled by an episodic,
+finite, stage-dependent Markov decision process of horizon H with S
+states, and A actions.
+• The performance of an agent is measured by the regret after
+interacting with the environment for T episodes.
+• Proposed an optimistic posterior sampling algorithm for reinforcement
+learning OPSRL, a simple variant of posterior sampling that only
+needs a number of posterior samples logarithmic in H, S, A, and T
+per state-action pair.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+26 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+• For OPSRL
+√ guaranteed a high-probability regret bound of order at
+most Õ( H 3 SAT ) ignoring poly log(HSAT ) terms.
+• The key novel technical ingredient is a new sharp anti-concentration
+inequality for linear forms which may be of independent interest.
+Specifically, extend the normal approximation-based lower bound for
+Beta distributions by Alfers and Dinges1 to Dirichlet
+distributions.
+√
+Bound matches the lower bound of order Ω( H 3 SAT ), thereby
+answering the open problems raised by Agrawal and Jia2 for the
+episodic setting.
+1A
+
+normal approximation for beta and gamma tail probabilities. Zeitschrift für
+Wahrscheinlichkeitstheorie und Verwandte Gebiete, 65(3):399–420, Feb 1984. ISSN 14322064. doi: 10.1007/BF00533744.
+2 Optimistic posterior sampling for reinforcement learning: worst-case regret bounds.
+In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R.
+Garnett, editors, Advances in Neural Information Processing Systems, volume 30. Curran
+Associates, Inc., 2017b.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+27 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Theorem (Regret bound for OPSRL)
+Consider a parameter δ ∈ (0, 1). Let
+κ ≜ 2(log(12SAH /δ) + 3 log(exp π(2T + 1))),
+n0 ≜ ⌈κ(c0 + log17/16 (T ))⌉, r0 ≜ 2, where c0 is an absolute constant
+defined as:
+√ !2
+ 
+49 · 4 6
+8
+20
+4
++8+
++ 1.
+c0 ≜ p
++ log17/16
+9
+π
+32
+log(17/16)
+
+(2)
+
+Then for OPSRL, with probability at least 1 − δ,
+√
+
+H 3 SATL3 + H 3 S 2 AL3 ,
+ℜT = Õ
+where L ≜ Õ(log(HSAT /δ)).
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+28 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Алгоритм 3: OPSRL
+Input: Family of probability distributions ρ : N+S+1 → ∆S ′ over
+transitions, initial pseudo-count n0h , number of posterior samples J.
+• for t ∈ [T ] do
+•
+For all (s, a, h) ∈ S × A × [H], sample J independent
+transitions
+p̃ht −1,j (s, a) ∼ ρ(nth−1 (s ′ |s, a)s ′ ∈S ′ ),
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+j ∈ [J].
+
+7 мая 2026
+
+29 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Алгоритм 3: OPSRL (продолжение)
+
+•
+
+t −1
+
+Optimistic backward induction: set V H+1 (s) = 0 and
+recursively for h ∈ [H], compute
+t −1
+
+t −1
+
+Q h (s, a) = rh (s, a) + max{p̃ht −1,j V h+1 (s, a)} ,
+j ∈[J]
+
+t −1
+t −1
+V h (s) = max Q h (s, a) ,
+a∈A
+t −1
+t
+πh (s) ∈ argmax Q h (s, a) .
+a∈A
+
+•
+for h ∈ [H] do
+•
+Play aht = πht (sht ).
+t
+•
+Observe sh+1
+∼ ph (sht , aht ).
+t
+•
+|sht , aht ).
+Increment the pseudo-count nth (sh+1
+•
+end for
+• end for
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+30 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Experimental results
+
+name
+OPSRL
+PSRL
+RLSVI
+UCBVI
+UCBVI-B
+
+70000
+60000
+
+regret
+
+50000
+40000
+30000
+20000
+10000
+0
+0
+
+2000
+
+4000
+
+episode
+
+6000
+
+8000
+
+10000
+
+Regret of OPSRL and baselines on grid-world environment with 100 states and 4
+action for H = 50 an transitions noise 0.2, average over 4 seeds.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+31 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+From Dirichlet to Rubin: Optimistic Exploration
+in RL without Bonuses
+• Proposed the BayesUCBVI algorithm for reinforcement learning in
+tabular, stage-dependent, episodic Markov decision process: a natural
+extension of the BayesUCB algorithm by Kaufmann et al.1 for
+multiarmed bandits.
+√
+• For BayesUCBVI, we prove a regret bound of order Õ( H 3 SAT )
+where H is the length of one episode, S is the number of states, A the
+number of actions,√
+T the number of episodes, that matches the
+lower-bound of Ω( H 3 SAT ) up to poly-log terms in H, S , A, T for a
+large enough T .
+1 On bayesian upper confidence bounds for bandit problems. In Neil D. Lawrence and
+
+Mark Girolami, editors, Proceedings of the Fifteenth International Conference on Artificial
+Intelligence and Statistics, volume 22 of Proceedings of Machine Learning Research, pages
+592–600, La Palma, Canary Islands, 2012. PMLR.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+32 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+From Dirichlet to Rubin: Optimistic Exploration
+in RL without Bonuses
+• This method uses the quantile of a Q-value function posterior as
+upper confidence bound on the optimal Q-value function.
+• To the best of our knowledge, this is the first algorithm that obtains
+an optimal dependence on the horizon H (and S) without the need of
+an involved Bernstein-like bonus or noise. Crucial to our analysis is a
+new fine-grained anticoncentration bound for a weighted Dirichlet sum
+that can be of independent interest.
+• And then explain how BayesUCBVI can be easily extended beyond the
+tabular setting, exhibiting a strong link between our algorithm and
+Bayesian bootstrap Rubin1 .
+1 The bayesian bootstrap. The annals of statistics, pages 130–134, 1981.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+33 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Regret upper bound for episodic, non-stationary,
+tabular MDPs
+
+Algorithm
+
+Upper bound (non-stationary)
+
+UCBVI (Azar et al.) 1
+UCBAdventage (Zhang et al.) 2
+RLSVI (Xiong et al.) 3
+
+√
+Õ( H 3 SAT )
+
+PSRL Agrawal and Jia 4
+BootNARL(Pacchiano et al.) 5
+
+√
+Õ(H 2 S AT )
+
+BayesUCBVI (this paper)
+Lower bound (Jin et al., Domingues et al.) 6
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+√
+Õ( H 3 SAT )
+√
+Ω( H 3 SAT )
+
+7 мая 2026
+
+34 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Regret upper bound for episodic, non-stationary,
+tabular MDPs
+1) Minimax regret bounds for reinforcement learning. In International
+Conference on Machine Learning, 2017.
+2) Almost optimal model-free reinforcement learning via
+reference-advantage decomposition. In Proceedings of the 34th
+International Conference on Neural Information Processing Systems,
+NIPS’20, Red Hook, NY, USA, 2020. Curran Associates Inc.
+3) Near-optimal randomized exploration for tabular mdp,2021.
+4) Optimistic posterior sampling for reinforcement learning: worst-case
+regret bounds. In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R.
+Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in Neural
+Information Processing Systems, volume 30. Curran Associates, Inc.,
+2017b.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+35 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Regret upper bound for episodic, non-stationary,
+tabular MDPs
+
+5) Towards tractable optimism in model-based reinforcement learning. In
+Cassio de Campos and Marloes H. Maathuis, editors, Proceedings of
+the Thirty-Seventh Conference on Uncertainty in Artificial Intelligence,
+volume 161 of Proceedings of Machine Learning Research, pages
+1413–1423. PMLR, 2021.
+6) Is Q-learning provably efficient? In Neural Information Processing
+Systems, 2018.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+36 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+From Dirichlet to Rubin: Optimistic Exploration
+in RL without Bonuses
+Theorem
+Consider a parameter δ > 0. Let n0 ≜ ⌈cn0 + log17/16 (T )⌉, r0 ≜ 2, where
+cn0 is an absolute constant defined as:
+1
+cn0 = √
+·
+( 2π − 1)2
+
+√
+2 2
+
+√ !2
+98 6
+log(10π)
+p
++
++
+.
+9
+log(17/16)
+log(17/16)
+
+(3)
+
+Then for BayesUCBVI, with probability at least 1 − δ,
+
+√
+H 3 SAT L + H 3 S 2 AL2 ,
+ℜT = Õ
+where L ≜ Õ(log(HSAT /δ)).
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+37 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Алгоритм 4: BayesUCBVI
+Input: quantile functions (κ t )t ∈[T ] , prior dist. ρ0
+• for t ∈ [T ] do
+
+•
+•
+•
+•
+•
+
+Optimistic planning, see
+for h ∈ [H]
+t −1
+
+Play aht ∈ argmaxa∈A Q h (sht , a)
+t
+Observe sh+1
+∼ ph (sht , aht )
+
+Update the posterior distributions ρth (sht , aht ) with
+t )
+(sht , aht , sh+1
+
+•
+end for
+• end for
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+38 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Experimental results
+
+Regret of BayesUCBVI and IncrBayesUCBVI compared to baselines for H = 30 an
+transitions noise 0.1, average over 4 seeds.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+39 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Experimental results
+
+Evaluating deep RL algorithms with median human normalized scores across
+Atari-57 games. We compare DoubleDQN, BootDQN and BayesUCBDQN. The
+training curves show the average ± std over 3 seeds.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+40 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Federated UCBVI: Communication-Efficient
+Federated Regret Minimization with
+Heterogeneous Agents
+В этой статье представлен интегрированный алгоритм итерации
+значений с верхней границей достоверности (Fed-UCBVI), новое
+расширение алгоритма UCBVI (Azar et al., 2017), адаптированное для
+интегрированной системы обучения.pДоказывается, что сожаление
+Fed-UCBVI масштабируется как O ( H 3 |S||A|T /M), с небольшим
+дополнительным членом из-за неоднородности. Примечательно, что в
+одноагентном сценарии эта верхняя граница соответствует
+минимаксной нижней границе с учетом полилогарифмических
+коэффициентов, в то время как в многоагентном сценарии Fed-UCBVI
+имеет линейное ускорение.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+41 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Setting: Policy and Value Functions
+
+A deterministic policy π is a set of functions πh : S → A where
+πh (s) ∈ A, h ∈ [H]. The value function Vih,π is defined as:
+"
+Vih,π (s) = Eπ
+′
+
+#
+
+H
+
+∑
+
+′
+′
+′
+rih (sih , aih ) | sih = s
+
+,
+
+(4)
+
+h′ =h
+′
+
+′
+
+where for all h ≤ h′ ≤ H, aih ∼ πih (.|sih ) and for all h ≤ h′ ≤ H − 1,
+′
+′
+′
+′
+sih +1 ∼ Pih (.|sih , aih ).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+42 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Setting: Policy and Value Functions
+Similarly, the Q-function of a policy π for agent i at step h is
+"
+#
+Qih,π (s, a) := Eπ
+
+H
+
+rih (sih , aih ) | sih = s, aih = a ,
+∑
+′
+′
+
+′
+
+′
+
+(5)
+
+h =h
+
+and satisfies the Bellman equations
+Qih,π (s, a) = rih (s, a) + Pih Vih+1
+,π (s, a),
+
+h
+Vih+1
+,π (s) = Qi ,π (s, πh (s)).
+
+(6)
+
+Additionally, the optimal Q-value satisfies the optimal Bellman equations
+Qih,⋄ (s, a) = rih (s, a) + Pih Vih+1
+,⋄ (s, a),
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+Vih,⋄ (s) = max Qih,⋄ (s, a).
+a ∈A
+
+7 мая 2026
+
+(7)
+
+43 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Setting: Learning Protocol
+
+At the beginning of each episode t ∈ [T ], all agents select a common
+policy πt , which is computed based on the information exchanged prior to
+episode t. Subsequently, each agent generates an independent trajectory of
+length H. At each step h, an agent observes its state sit,h ∈ S and takes an
+action ait,h = πth (sit,h ) ∈ A. The agent then observes the next state sit,h+1
+according to the transition probabilities Pih (·|sit,h , ait,h ) and receives a
+deterministic reward rit,h = rih (sit,h , ait,h ). After generating these
+trajectories, agents may exchange information through the central server.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+44 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Setting: Federated Regret
+
+The performance of the learning algorithm is evaluated using the federated
+regret, defined as
+R(T ) := max
+π
+
+
+1 M T  1 t,1
+t,1
+1
+(s
+V
+(s
+)
+−
+V
+)
+.
+∑ ∑ i ,π i
+i ,πt i
+M i=1
+t=1
+
+(8)
+
+This regret measures the cumulative difference, in expectation, between the
+average value of the optimal collaborative policy and the policies used
+throughout the training procedure.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+45 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Communication Complexity and Cost
+
+The communication complexity, denoted by C (T ), is defined as the
+number of episodes where communication between the CS and the agents
+occurs. The communication cost refers to the total number of bits
+exchanged between the central server and the agents during the learning
+process. The objective of the FRL algorithm is to simultaneously minimize
+both the regret R(T ) and the communication complexity C (T ).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+46 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Environmental Heterogeneity
+The environments in which agents evolve may differ from one to another.
+However, since agents aim to learn a shared policy, environmental
+heterogeneity must be small. To measure this, introduced a new notion of
+heterogeneity, decomposing each agent’s state-action transition kernel into
+a common part, shared by all agents, and an individual part that reflects
+unique environmental characteristics. Formally, this is captured by the
+following assumption.
+A-1. There exists a non-homogeneous transition kernel {Pch }h∈[H] , M
+h }
+individual non-homogeneous transition kernels {Pind,i
+h∈[H] for any
+i ∈ [M], and a constant ε p ∈ [0, 1), such that for any i ∈ [M] and
+(s, a, s ′ , h) ∈ S × A × S × [H],
+h
+Pih (s ′ |s, a) = (1 − ε p )Pch (s ′ |s, a) + ε p Pind,i
+(s ′ |s, a).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+(9)
+47 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Environmental Heterogeneity
+
+A-2. There exists a constant ε r ∈ [0, 1) such that for all (i , j) ∈ [M], and
+for all h ∈ [H] it holds that
+
+∥rih − rjh ∥∞ ≤ ε r .
+
+(10)
+
+Note that A-1 implies the following bound on the difference between the
+common transition kernel and each agent’s transition kernel, measured in
+L1 -norm,
+max
+∥Pch (·|s, a) − Pih (·|s, a)∥1 ≤ ε p .
+(11)
+(s,a,h)∈S ×A×[H]
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+48 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+FED-UCBVI ALGORITHM
+
+In this frame, presented the Fed-UCBVI algorithm, which extends the
+UCBVI algorithm proposed by Azar et al. (2017) to the federated learning
+framework. The process involves multiple communication rounds with a
+CS. The number of episodes in each communication round (or epoch) r is
+random, and each epoch is decomposed into three phases.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+49 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+FED-UCBVI ALGORITHM
+(i) Data collection: During this phase, each agent interacts with its
+environment using the policy π (r ) provided by the CS, gathering
+trajectory data,
+(ii) Synchronization: Once any agent meets the synchronization
+conditions, it sends a synchronization signal to the central server,
+which then broadcasts this information to all other agents,
+(iii) Policy update: In this phase, all agents engage in H sequential
+communications with the CS. At each step h = H to 1, agents send
+their local estimates of the Q-values and other related information
+related to step h to the CS. In return, they receive a global estimate of
+the V-values, along with an updated policy and related information for
+that step.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+50 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Algorithm
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+51 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Data Collection
+
+At the beginning of round r , each agent i ∈ [M] follows the policy π (r ) to
+(r ,ℓ),h
+(s, a) and
+collect new trajectories. For ℓ ∈ N, denote by ni
+(r ,ℓ),h
+′
+ni
+(s, a, s ) the number of visits to a state-action pair (s, a) and the
+number of transitions from (s, a) to s ′ at step h after ℓ episodes in the
+round r .
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+52 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Synchronization
+At the start of epoch r , all agents receive the current global counters
+M
+
+N (r ),h (s, a) := ∑ ni
+
+(r ),h
+
+(12)
+
+(s, a),
+
+i=1
+
+(r ),h
+
+(r ,0),h
+
+where ni (s, a) := ni
+(s, a) is the number of visits of a state-action
+pair by agent i prior to round r . During epoch r , after ℓ episodes, agent i
+sends a synchronization signal if a newly visited state-action-step triplet
+(s, a, h) is identified and one of two synchronization conditions is met.
+These conditions depend on whether the total number of visits N (r ),h (s, a)
+exceeds a threshold ν(δ, T ) = O(ε p THM + M).
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+53 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Synchronization
+1) Local Doubling Condition. If N (r ),h (s, a) ≤ ν(δ, T ), an agent i sends
+the synchronization signal if
+(r ,ℓ),h
+
+ni
+
+(r ),h
+
+(s, a) > 2ni
+
+(13)
+
+(s, a).
+
+2) Globally Estimated Doubling Condition. If N (r ),h (s, a) > ν(δ, T ),
+agent i sends the synchronization signal if
+(r ,ℓ),h
+
+N̂i
+
+(s, a) > 2N (r ),h (s, a),
+
+(r ,ℓ),h
+
+(r ,ℓ),h
+
+where N̂i
+(s, a) is an estimate of ∑M
+i=1 ni
+information available to agent i.
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+(14)
+
+(s, a) based on the
+
+7 мая 2026
+
+54 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Policy Update
+Upon receiving the synchronization signal, each agent computes its local
+estimates of transition probabilities as
+(r +1),h
+ni
+(s, a, s ′ )
+(r +1),h ′
+Pi
+(s |s, a) :=
+(r +1),h
+(s, a)
+ni
+(r +1),h
+
+(15)
+
+(r +1),h
+
+if ni
+(s, a) > 0, otherwise Pi
+(s ′ |s, a) := |S1 | . Next, the agents
+and the central server exchange their Q- and V-value estimates. For
+h = H, . . . , 1, each agent computes the local Q-value estimate
+(r +1),h
+
+Q̂i
+
+(r +1),h
+
+(s, a) := rih + Pi
+
+V̂ (r +1),h+1 (s, a),
+
+(16)
+
+using the global value estimate V̂ (r +1),h+1 previously received from the CS.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+55 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Policy Update
+The aggregated Q-value is computed as
+h
+i
+(r +1),h
+Q̂ (r +1),h (s, a) := min Tω
++ b (r +1),h (s, a), H,
+(r +1),h
+
+with Tω
+(r +1),h
+
+(r +1),h
+
+(s, a) = ∑M
+i=1 ωi
+(r +1),h
+ni
+(s,a)
+N (r +1),h (s,a)
+
+(r +1),h
+
+(s, a)Q̂i
+
+(17)
+
+(s, a), and
+
+ωi
+(s, a) :=
+. Finally, the central server updates the value
+function and policy according to the equations
+V (r +1),h (s) := max Q̂ (r +1),h (s, a),
+
+(18)
+
+π (r +1),h (s) := arg max Q̂ (r +1),h (s, a).
+
+(19)
+
+a ∈A
+
+a ∈A
+
+These updated values are distributed to all agents, and the process
+continues for all h = H, . . . , 1. Once h = 1 is reached, the new epoch r + 1
+begins.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+56 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Communication Complexity
+Algorithmic design shares similarities with previous work on reinforcement
+learning with low switching cost (Bai et al., 2019; Zhang et al., 2020; Qiao
+et al., 2022). In particular, the number of times the local data collection
+policy changes—known as the switching cost—directly corresponds to the
+number of communication rounds in our framework, which was defined as
+the communication complexity. In its simplest form, the doubling condition
+in this context can be expressed as:
+
+∃(s, a, h) : N (r ,ℓ),h (s, a) > 2N (r ),h (s, a),
+
+(20)
+
+(r ,ℓ),h
+
+where N (r ,ℓ),h (s, a) := ∑M
+(s, a) represents the cumulative count
+i=1 ni
+across agents. However, this condition cannot be directly verified in a
+federated learning setting, as the value of N (r ,ℓ),h (s, a) is not accessible to
+any individual agent.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+57 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Communication Complexity
+One potential solution is to use a weaker local doubling condition, as
+defined in (7). However, this approach results in communication complexity
+scaling linearly with the number of agents M, which is impractical for
+large-scale federated learning environments. Instead, was proposed to
+(r ,ℓ),h
+construct an estimate of the global counter N̂i
+(s, a) to serve as a
+plug-in estimate on the lefthand side of (15). This is the core idea behind
+the condition in (8). While such estimates may be inaccurate during the
+initial stages of training, they become reliable once the number of visits
+exceeds a threshold ν(δ, T ) = O(ε p THM + M), defined in (57). At that
+(r ,ℓ),h
+point, N̂i
+(s, a) can be effectively used as a plug-in estimate. Using this
+approach, we establish a bound on the communication complexity of
+Fed-UCBVI.
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+58 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Main Results
+Lemma (4.1)
+(Communication Complexity). With probability at least 1 − δ, the number
+of communication rounds of Fed-UCBVI is bounded by
+C (T ) ≤ O(|S ||A|H log T + M |S ||A|H log log T + M |S ||A|H log(1 + ε p T )),
+(21)
+where logarithmic dependence in |S |, |A|, H, 1/δ and M is ignored.
+Theorem (4.1)
+With probability at least 1 − δ, the following bound on the regret of
+Fed-UCBVI holds
+ 3
+
+H |S ||A|T
+3
+2
+R(T ) = O
++ H |S | |A|+O(TH(Hε p + ε r )) .
+M
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+(22)
+59 / 60
+
+Multi-Armed Bandit Problem
+
+Обучаемые модели
+
+Интересные статьи
+
+Federated UCBVI: Communication-Efficient Federated Regret Minimization with Heterogeneous Agents
+
+Experiments
+
+Руденко В., Юдин Н. (МФТИ)
+
+Лекция
+
+7 мая 2026
+
+60 / 60
+
+
