@@ -2,3 +2,35 @@
 __pycache__/
 .venv/
 *.Marusyach-PC'
+
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+
+# LaTeX temporary / misc
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.nav
+*.snm
+*.abs
+
+# PDF viewer temp
+*.pdfsync
+
+# Editor / OS stuff
+.DS_Store
+Thumbs.db
+
+# VS Code 
+.vscode/
