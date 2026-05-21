@@ -1,0 +1,797 @@
+\documentclass[8pt,a4paper]{extarticle}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T2A]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[russian]{babel}
+\else
+  \usepackage{fontspec}
+  \usepackage[russian]{babel}
+  \setmainfont{DejaVu Serif}
+  \setsansfont{DejaVu Sans}
+  \setmonofont{DejaVu Sans Mono}
+\fi
+\usepackage{amsmath,amssymb,mathtools,bm,multicol,enumitem,geometry,booktabs}
+\geometry{top=0.7cm,bottom=0.8cm,left=0.7cm,right=0.7cm}
+\setlength{\columnsep}{0.45cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1pt}
+\setlist[itemize]{nosep,leftmargin=*,topsep=0pt,partopsep=0pt}
+\setlist[enumerate]{nosep,leftmargin=*,topsep=0pt,partopsep=0pt}
+\renewcommand{\baselinestretch}{0.92}
+
+\newcommand{\E}{\mathbb E}
+\renewcommand{\Prob}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\softmax}{\operatorname{softmax}}
+\newcommand{\sign}{\operatorname{sign}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\cS}{\mathcal S}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cD}{\mathcal D}
+\newcommand{\cE}{\mathcal E}
+\newcommand{\cT}{\mathcal T}
+\newcommand{\1}{\mathbf 1}
+
+\begin{document}
+\begin{center}
+{\Large \textbf{RL: самый минимум формул по билетам}}\\[-1mm]
+{\small без доказательств, только определения, теоремы, таргеты, лоссы, алгоритмические шаги}
+\end{center}
+\vspace{-2mm}
+\begin{multicols*}{2}
+\footnotesize
+
+\subsection*{1. CEM}
+Задача:
+\[
+x^*\in\argmax_x S(x),\qquad x\sim q_\theta(x).
+\]
+Редкое событие / элита:
+\[
+p^*(x)=p(x\mid S(x)\ge\gamma)=\frac{p(x)\1\{S(x)\ge\gamma\}}{\Prob(S(X)\ge\gamma)}.
+\]
+Проекция на семейство:
+\[
+\theta^*=\argmin_\theta \KL(p^*\Vert q_\theta)
+=\argmax_\theta \E_{p^*}\log q_\theta(X).
+\]
+Практическое обновление:
+\[
+\cE_k=\{x_i:S(x_i)\ge\gamma_k\},\quad
+\theta_{k+1}=\argmax_\theta\sum_{x_i\in\cE_k}\log q_\theta(x_i).
+\]
+Для $q_\theta=\mathcal N(\mu,\Sigma)$:
+\[
+\mu^+=\frac1{|\cE|}\sum_{x_i\in\cE}x_i,
+\quad
+\Sigma^+=\frac1{|\cE|}\sum_{x_i\in\cE}(x_i-\mu^+)(x_i-\mu^+)^\top.
+\]
+Сглаживание:
+\[
+\theta_{k+1}\leftarrow \alpha\theta^+ +(1-\alpha)\theta_k.
+\]
+RL-вариант:
+\[
+\tau\sim q_\theta(\tau),\quad S(\tau)=R(\tau)=\sum_t\gamma^t r_t,
+\quad \theta^+=\argmax_\theta\sum_{\tau_i\in\cE}\log q_\theta(\tau_i).
+\]
+
+\subsection*{2. Беллман, PI/VI}
+MDP:
+\[
+M=(\cS,\cA,p,r,\gamma),\quad p(s'\mid s,a),\quad \pi(a\mid s).
+\]
+Ядро политики:
+\[
+P_\pi(s'\mid s)=\sum_a\pi(a\mid s)p(s'\mid s,a).
+\]
+Функции ценности:
+\[
+V^\pi(s)=\E_\pi\sum_{t\ge0}\gamma^t r_t\mid s_0=s,
+\quad
+Q^\pi(s,a)=\E_\pi\sum_{t\ge0}\gamma^t r_t\mid s_0=s,a_0=a.
+\]
+Связь $V,Q$:
+\[
+V^\pi(s)=\sum_a\pi(a\mid s)Q^\pi(s,a),
+\]
+\[
+Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)V^\pi(s').
+\]
+Беллман для политики:
+\[
+V^\pi(s)=\sum_a\pi(a\mid s)\left[r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)V^\pi(s')\right].
+\]
+В матричном виде:
+\[
+V^\pi=r_\pi+\gamma P_\pi V^\pi,
+\quad
+V^\pi=(I-\gamma P_\pi)^{-1}r_\pi.
+\]
+Оптимальность:
+\[
+V^*(s)=\max_a\left[r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)V^*(s')\right],
+\]
+\[
+Q^*(s,a)=r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)\max_{a'}Q^*(s',a').
+\]
+Жадная политика:
+\[
+\pi^*(s)\in\argmax_a Q^*(s,a).
+\]
+Оператор Беллмана - сжатие:
+\[
+\|BV-BU\|_\infty\le \gamma\|V-U\|_\infty.
+\]
+Policy Evaluation:
+\[
+V_{k+1}=r_\pi+\gamma P_\pi V_k.
+\]
+Policy Improvement:
+\[
+\pi_{k+1}(s)\in\argmax_a\left[r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)V^{\pi_k}(s')\right].
+\]
+Value Iteration:
+\[
+V_{k+1}(s)=\max_a\left[r(s,a)+\gamma\sum_{s'}p(s'\mid s,a)V_k(s')\right].
+\]
+
+\subsection*{3. MC, TD, Q-learning}
+Return:
+\[
+G_t=\sum_{k=t}^{T-1}\gamma^{k-t}r_k.
+\]
+Инкрементальное среднее:
+\[
+\hat Q_{n+1}=\hat Q_n+\alpha_n(G-\hat Q_n),
+\quad
+\sum_n\alpha_n=\infty,
+\quad
+\sum_n\alpha_n^2<\infty.
+\]
+MC-оценивание:
+\[
+Q(s,a)\leftarrow Q(s,a)+\alpha\left(G_t-Q(s,a)\right).
+\]
+TD(0) для $V$:
+\[
+\delta_t=r_t+\gamma V(s_{t+1})-V(s_t),
+\quad
+V(s_t)\leftarrow V(s_t)+\alpha\delta_t.
+\]
+SARSA:
+\[
+Q(s_t,a_t)\leftarrow Q(s_t,a_t)+\alpha\left[r_t+\gamma Q(s_{t+1},a_{t+1})-Q(s_t,a_t)\right].
+\]
+Q-learning:
+\[
+Q(s_t,a_t)\leftarrow Q(s_t,a_t)+\alpha\left[r_t+\gamma\max_{a'}Q(s_{t+1},a')-Q(s_t,a_t)\right].
+\]
+Expected SARSA:
+\[
+y_t=r_t+\gamma\sum_{a'}\pi(a'\mid s_{t+1})Q(s_{t+1},a').
+\]
+$\varepsilon$-greedy:
+\[
+\pi(a\mid s)=
+\begin{cases}
+1-\varepsilon+\varepsilon/|\cA|,&a\in\argmax_b Q(s,b),\\
+\varepsilon/|\cA|,&\text{иначе.}
+\end{cases}
+\]
+MC: без смещения, большая дисперсия. TD: смещённая оценка, малая дисперсия.
+
+\subsection*{4. DQN и модификации}
+DQN-таргет:
+\[
+y=r+\gamma(1-d)\max_{a'}Q_{\theta^-}(s',a').
+\]
+Лосс:
+\[
+L(\theta)=\E_{(s,a,r,s',d)\sim\cD}\left(Q_\theta(s,a)-y\right)^2.
+\]
+Replay buffer:
+\[
+(s_t,a_t,r_t,s_{t+1},d_t)\to\cD,
+\quad B\sim\mathrm{Unif}(\cD).
+\]
+Target network:
+\[
+\theta^-\leftarrow\theta \quad\text{каждые }K\text{ шагов},
+\quad\text{или}\quad \theta^-\leftarrow \tau\theta+(1-\tau)\theta^-.
+\]
+Double DQN:
+\[
+a^*=\argmax_{a'}Q_\theta(s',a'),
+\quad y=r+\gamma(1-d)Q_{\theta^-}(s',a^*).
+\]
+PER:
+\[
+\delta_i=y_i-Q(s_i,a_i),\quad
+p_i\propto(|\delta_i|+\varepsilon)^\alpha,
+\quad P(i)=\frac{p_i}{\sum_jp_j},
+\]
+\[
+w_i=\left(\frac1{N P(i)}\right)^\beta,
+\quad L=\E_i\, w_i\delta_i^2.
+\]
+Dueling DQN:
+\[
+Q(s,a)=V(s)+A(s,a)-\frac1{|\cA|}\sum_{b}A(s,b).
+\]
+NoisyNet:
+\[
+W=\mu_W+\sigma_W\odot\varepsilon_W.
+\]
+Multi-step DQN:
+\[
+y_t^{(n)}=\sum_{k=0}^{n-1}\gamma^k r_{t+k}+\gamma^n(1-d_{t+n})\max_a Q_{\theta^-}(s_{t+n},a).
+\]
+DRQN / memory:
+\[
+h_t=f_\theta(o_t,h_{t-1}),\quad Q_t=Q_\theta(h_t,a).
+\]
+
+\subsection*{5. Distributional RL, QR-DQN, IQN}
+Случайная доходность:
+\[
+Z^\pi(s,a)=\sum_{t\ge0}\gamma^t r_t,
+\quad Q^\pi(s,a)=\E Z^\pi(s,a).
+\]
+Distributional Bellman:
+\[
+Z^\pi(s,a)\overset{D}=r(s,a)+\gamma Z^\pi(S',A'),
+\quad S'\sim p(\cdot\mid s,a),\ A'\sim\pi(\cdot\mid S').
+\]
+Оптимальный вариант:
+\[
+Z^*(s,a)\overset{D}=r+\gamma Z^*(S',a^*),
+\quad a^*=\argmax_b \E Z^*(S',b).
+\]
+Wasserstein:
+\[
+W_p(U,V)=\left(\inf_{\mu\in\Gamma(U,V)}\E_{(x,y)\sim\mu}|x-y|^p\right)^{1/p}.
+\]
+QR-DQN аппроксимация:
+\[
+Z_\theta(s,a)=\frac1N\sum_{i=1}^N\delta_{\theta_i(s,a)},
+\quad \tau_i=\frac{i-1/2}{N}.
+\]
+Таргет-атомы:
+\[
+y_j=r+\gamma\theta^-_j(s',a^*),
+\quad a^*=\argmax_a\frac1N\sum_j\theta_j(s',a).
+\]
+Квантильный Huber:
+\[
+\rho_\tau^\kappa(u)=|\tau-\1\{u<0\}|\,L_\kappa(u),
+\]
+\[
+L_\kappa(u)=
+\begin{cases}
+\frac12u^2,&|u|\le\kappa,\\
+\kappa(|u|-\frac12\kappa),&|u|>\kappa.
+\end{cases}
+\]
+Лосс QR:
+\[
+L=\frac1{N^2}\sum_{i,j}\rho_{\tau_i}^\kappa(y_j-\theta_i(s,a)).
+\]
+IQN:
+\[
+\tau\sim U[0,1],\quad Z_\theta(s,a;\tau)=F^{-1}_{Z(s,a)}(\tau),
+\]
+\[
+Q(s,a)\approx\frac1K\sum_{k=1}^K Z_\theta(s,a;\tau_k),
+\quad \tau_k\sim U[0,1].
+\]
+
+\subsection*{6. RND, ICM}
+Общая внутренняя награда:
+\[
+r_t=r_t^{\rm extr}+\beta r_t^{\rm intr}.
+\]
+Разложение для фиксированной политики:
+\[
+Q^\pi=Q^\pi_{\rm extr}+\beta Q^\pi_{\rm intr},
+\quad V^\pi=V^\pi_{\rm extr}+\beta V^\pi_{\rm intr}.
+\]
+Count-based:
+\[
+r^{\rm intr}(s)=\frac{1}{\sqrt{N(s)}}\quad\text{или}\quad \frac1{N(s)}.
+\]
+RND:
+\[
+f:\cS\to\R^d\ \text{fixed},\quad \hat f_\theta:\cS\to\R^d\ \text{trained},
+\]
+\[
+L_{\rm RND}(\theta)=\|\hat f_\theta(s)-f(s)\|_2^2,
+\quad r^{\rm intr}(s)=\|\hat f_\theta(s)-f(s)\|_2^2.
+\]
+ICM encoder:
+\[
+\phi_t=\phi(s_t),\quad \phi_{t+1}=\phi(s_{t+1}).
+\]
+Inverse dynamics:
+\[
+\hat a_t=g_\eta(\phi_t,\phi_{t+1}),
+\quad L_I=\ell(\hat a_t,a_t).
+\]
+Forward dynamics:
+\[
+\hat\phi_{t+1}=F_\psi(\phi_t,a_t),
+\quad L_F=\frac12\|\hat\phi_{t+1}-\phi_{t+1}\|^2.
+\]
+ICM loss / reward:
+\[
+L_{\rm ICM}=(1-\lambda)L_I+\lambda L_F,
+\quad r^{\rm intr}_t=\eta L_F.
+\]
+
+\subsection*{7. Policy Gradient, REINFORCE}
+Objective:
+\[
+J(\theta)=\E_{\tau\sim\pi_\theta}\sum_{t\ge0}\gamma^t r_t.
+\]
+Log-derivative trick:
+\[
+\nabla_\theta p_\theta(x)=p_\theta(x)\nabla_\theta\log p_\theta(x).
+\]
+Policy Gradient theorem:
+\[
+\nabla_\theta J(\theta)=\E_{\tau\sim\pi_\theta}\sum_{t\ge0}\gamma^t\nabla_\theta\log\pi_\theta(a_t\mid s_t)Q^{\pi_\theta}(s_t,a_t).
+\]
+Через $d^\pi$:
+\[
+\nabla_\theta J=\frac1{1-\gamma}\E_{s\sim d^\pi,a\sim\pi}\nabla_\theta\log\pi_\theta(a\mid s)Q^\pi(s,a).
+\]
+Discounted visitation:
+\[
+d^\pi(s)=(1-\gamma)\sum_{t\ge0}\gamma^t\Prob(s_t=s\mid\pi).
+\]
+Baseline:
+\[
+\E_{a\sim\pi}\nabla_\theta\log\pi_\theta(a\mid s)b(s)=0,
+\]
+\[
+\nabla J=\frac1{1-\gamma}\E\nabla\log\pi_\theta(a\mid s)(Q^\pi(s,a)-b(s)).
+\]
+Advantage:
+\[
+A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s).
+\]
+REINFORCE:
+\[
+G_t=\sum_{k=t}^{T-1}\gamma^{k-t}r_k,
+\quad
+\hat g=\sum_t \gamma^t\nabla_\theta\log\pi_\theta(a_t\mid s_t)G_t.
+\]
+With baseline:
+\[
+\hat g=\sum_t\gamma^t\nabla_\theta\log\pi_\theta(a_t\mid s_t)(G_t-b(s_t)).
+\]
+Entropy regularization:
+\[
+J_H=J+\beta\E_s H(\pi(\cdot\mid s)),
+\quad H(\pi)=-\E_\pi\log\pi.
+\]
+
+\subsection*{8. Actor-Critic, A2C, GAE}
+Critic TD-error:
+\[
+\delta_t=r_t+\gamma V_\phi(s_{t+1})-V_\phi(s_t).
+\]
+Actor update:
+\[
+\nabla_\theta J\approx \E\nabla_\theta\log\pi_\theta(a_t\mid s_t)\hat A_t.
+\]
+Critic loss:
+\[
+L_V(\phi)=\E\left(V_\phi(s_t)-\hat V_t\right)^2.
+\]
+One-step AC:
+\[
+\hat A_t=\delta_t,
+\quad \hat V_t=r_t+\gamma V_\phi(s_{t+1}).
+\]
+$n$-step return:
+\[
+G_t^{(n)}=\sum_{k=0}^{n-1}\gamma^k r_{t+k}+\gamma^n V(s_{t+n}).
+\]
+$n$-step advantage:
+\[
+\hat A_t^{(n)}=G_t^{(n)}-V(s_t).
+\]
+A2C total loss:
+\[
+L(\theta,\phi)=-\E\log\pi_\theta(a_t\mid s_t)\hat A_t+c_v\E(V_\phi(s_t)-\hat V_t)^2-c_H\E H(\pi_\theta(\cdot\mid s_t)).
+\]
+GAE:
+\[
+\hat A_t^{\rm GAE(\gamma,\lambda)}=\sum_{l=0}^{\infty}(\gamma\lambda)^l\delta_{t+l}.
+\]
+Equivalent mixture:
+\[
+\hat A_t^{\rm GAE}=(1-\lambda)\sum_{n=1}^{\infty}\lambda^{n-1}\hat A_t^{(n)}.
+\]
+Target for critic:
+\[
+\hat V_t=\hat A_t+V_\phi(s_t).
+\]
+
+\subsection*{9. TRPO}
+Relative performance identity:
+\[
+J(\pi)-J(\pi_{old})=\frac1{1-\gamma}\E_{s\sim d^\pi,a\sim\pi}A^{\pi_{old}}(s,a).
+\]
+Surrogate:
+\[
+L_{\pi_{old}}(\pi)=J(\pi_{old})+\frac1{1-\gamma}\E_{s\sim d^{\pi_{old}},a\sim\pi}A^{\pi_{old}}(s,a).
+\]
+Importance sampling:
+\[
+L(\theta)=\E_{s,a\sim\pi_{old}}\frac{\pi_\theta(a\mid s)}{\pi_{old}(a\mid s)}A^{\pi_{old}}(s,a).
+\]
+TRPO constrained problem:
+\[
+\max_\theta L(\theta)
+\quad\text{s.t.}\quad
+\E_{s\sim d^{\pi_{old}}}\KL(\pi_{old}(\cdot\mid s)\Vert\pi_\theta(\cdot\mid s))\le \delta.
+\]
+Lower bound form:
+\[
+J(\pi)\ge L_{\pi_{old}}(\pi)-C\,D_{\rm TV}^{\max}(\pi_{old},\pi)^2.
+\]
+Quadratic approximation:
+\[
+L(\theta)\approx g^\top(\theta-\theta_{old}),
+\quad \bar D_{\rm KL}\approx \tfrac12(\theta-\theta_{old})^\top H(\theta-\theta_{old}).
+\]
+Natural gradient step:
+\[
+\Delta\theta=\sqrt{\frac{2\delta}{g^\top H^{-1}g}}H^{-1}g.
+\]
+
+\subsection*{10. Bias-variance, GAE, PPO}
+MC / $n$-step / TD:
+\[
+\hat A_t^{MC}=\sum_{k=0}^{\infty}\gamma^k r_{t+k}-V(s_t),
+\]
+\[
+\hat A_t^{(n)}=\sum_{k=0}^{n-1}\gamma^k r_{t+k}+\gamma^nV(s_{t+n})-V(s_t),
+\]
+\[
+\hat A_t^{(1)}=r_t+\gamma V(s_{t+1})-V(s_t)=\delta_t.
+\]
+Bias-variance: MC $\downarrow$ bias, $\uparrow$ variance; TD $\uparrow$ bias, $\downarrow$ variance.
+GAE:
+\[
+\delta_t=r_t+\gamma V(s_{t+1})-V(s_t),
+\quad
+\hat A_t=\sum_{l\ge0}(\gamma\lambda)^l\delta_{t+l}.
+\]
+PPO ratio:
+\[
+\rho_t(\theta)=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{old}(a_t\mid s_t)}.
+\]
+PPO-Clip:
+\[
+L^{CLIP}(\theta)=\E_t\min\left(\rho_t(\theta)\hat A_t,
+\clip(\rho_t(\theta),1-\varepsilon,1+\varepsilon)\hat A_t\right).
+\]
+Full PPO loss:
+\[
+L=L^{CLIP}-c_v L_V+c_H H,
+\quad
+L_V=\E_t(V_\phi(s_t)-\hat V_t)^2.
+\]
+Clipped value loss:
+\[
+V_\phi^{clip}=V_{old}+\clip(V_\phi-V_{old},-\varepsilon_v,\varepsilon_v),
+\]
+\[
+L_V=\E_t\max\left((V_\phi-\hat V)^2,(V_\phi^{clip}-\hat V)^2\right).
+\]
+KL-penalty PPO:
+\[
+\max_\theta \E_t\rho_t\hat A_t-\beta\E_t\KL(\pi_{old}\Vert\pi_\theta).
+\]
+
+\subsection*{11. DDPG, TD3}
+Deterministic Policy Gradient:
+\[
+\nabla_\theta J(\pi_\theta)=\frac1{1-\gamma}\E_{s\sim d^{\pi_\theta}}\left[\nabla_\theta\pi_\theta(s)^\top\nabla_a Q^\pi(s,a)\vert_{a=\pi_\theta(s)}\right].
+\]
+Critic target DDPG:
+\[
+y=r+\gamma(1-d)Q_{\omega^-}(s',\pi_{\theta^-}(s')).
+\]
+Critic loss:
+\[
+L_Q(\omega)=\E(Q_\omega(s,a)-y)^2.
+\]
+Actor objective:
+\[
+J_\pi(\theta)=\E_{s\sim\cD}Q_\omega(s,\pi_\theta(s)),
+\quad
+\theta\leftarrow\theta+\alpha\nabla_\theta J_\pi.
+\]
+Exploration:
+\[
+a_t=\pi_\theta(s_t)+\varepsilon_t,
+\quad \varepsilon_t\sim\mathcal N(0,\sigma^2I)
+\quad\text{или OU-noise}.
+\]
+Soft target update:
+\[
+\omega^-\leftarrow\tau\omega+(1-\tau)\omega^-,
+\quad \theta^-\leftarrow\tau\theta+(1-\tau)\theta^-.
+\]
+TD3 target policy smoothing:
+\[
+\tilde a'=\pi_{\theta^-}(s')+\clip(\varepsilon,-c,c),
+\quad \varepsilon\sim\mathcal N(0,\sigma^2I).
+\]
+Clipped double Q:
+\[
+y=r+\gamma(1-d)\min_{i=1,2}Q_{\omega_i^-}(s',\tilde a').
+\]
+Delayed policy updates:
+\[
+\theta\text{ обновляется раз в }d\text{ шагов критика.}
+\]
+
+\subsection*{12. Entropy RL, SAC}
+Entropy:
+\[
+H(\pi(\cdot\mid s))=-\E_{a\sim\pi}\log\pi(a\mid s).
+\]
+Maximum Entropy RL:
+\[
+J_{soft}(\pi)=\E_\pi\sum_{t\ge0}\gamma^t\left[r_t+\alpha H(\pi(\cdot\mid s_t))\right]
+=\E_\pi\sum_t\gamma^t\left[r_t-\alpha\log\pi(a_t\mid s_t)\right].
+\]
+Soft $Q,V$:
+\[
+Q^\pi_{soft}(s,a)=r(s,a)+\gamma\E_{s'}V^\pi_{soft}(s'),
+\]
+\[
+V^\pi_{soft}(s)=\E_{a\sim\pi}\left[Q^\pi_{soft}(s,a)-\alpha\log\pi(a\mid s)\right].
+\]
+Soft Bellman:
+\[
+Q^\pi_{soft}(s,a)=r+\gamma\E_{s',a'}\left[Q^\pi_{soft}(s',a')-\alpha\log\pi(a'\mid s')\right].
+\]
+Soft policy improvement:
+\[
+\max_\pi \E_{a\sim\pi}\left[Q(s,a)-\alpha\log\pi(a\mid s)\right]
+\quad\Leftrightarrow\quad
+\min_\pi \KL\left(\pi(\cdot\mid s)\middle\Vert \frac{\exp(Q(s,\cdot)/\alpha)}{Z(s)}\right).
+\]
+SAC critic target:
+\[
+y=r+\gamma(1-d)\left[\min_iQ_{\omega_i^-}(s',a')-\alpha\log\pi_\theta(a'\mid s')\right],
+\quad a'\sim\pi_\theta(\cdot\mid s').
+\]
+Critic loss:
+\[
+L_Q=\sum_i\E(Q_{\omega_i}(s,a)-y)^2.
+\]
+Actor loss:
+\[
+L_\pi(\theta)=\E_{s\sim\cD,a\sim\pi_\theta}\left[\alpha\log\pi_\theta(a\mid s)-\min_iQ_{\omega_i}(s,a)\right].
+\]
+Temperature tuning:
+\[
+L(\alpha)=\E_{a\sim\pi_\theta}\left[-\alpha(\log\pi_\theta(a\mid s)+\bar H)\right].
+\]
+Reparameterization:
+\[
+a=f_\theta(\epsilon;s),\quad \epsilon\sim\mathcal N(0,I).
+\]
+
+\subsection*{13. Imitation, offline RL, GCL, GAIL}
+Behavior cloning:
+\[
+\theta^*=\argmax_\theta\sum_{(s,a)\in\cD_E}\log\pi_\theta(a\mid s).
+\]
+Offline RL dataset:
+\[
+\cD=\{(s,a,r,s')\}\sim\mu(a\mid s),\quad \text{без нового online-сбора.}
+\]
+IRL:
+\[
+\cD_E=\{\tau_i^E\},\quad r_\theta(s,a)\ \text{восстановить}.
+\]
+MaxEnt trajectory model:
+\[
+p_\theta(\tau)=\frac1{Z(\theta)}\exp(R_\theta(\tau))\prod_t p(s_{t+1}\mid s_t,a_t),
+\quad R_\theta(\tau)=\sum_t r_\theta(s_t,a_t).
+\]
+GCL log-likelihood:
+\[
+\log p_\theta(\tau)=R_\theta(\tau)-\log Z(\theta)+\text{const}.
+\]
+Gradient:
+\[
+\nabla_\theta \ell=\E_{\tau\sim\cD_E}\nabla_\theta R_\theta(\tau)-\E_{\tau\sim p_\theta}\nabla_\theta R_\theta(\tau).
+\]
+Occupancy measure:
+\[
+\rho_\pi(s,a)=\pi(a\mid s)\sum_{t\ge0}\gamma^t\Prob(s_t=s\mid\pi).
+\]
+GAIL objective:
+\[
+\min_\pi\max_D\ \E_{(s,a)\sim\rho_E}\log D(s,a)
++\E_{(s,a)\sim\rho_\pi}\log(1-D(s,a))-\lambda H(\pi).
+\]
+Reward for policy:
+\[
+r_D(s,a)=-\log(1-D(s,a))
+\quad\text{или}\quad
+r_D(s,a)=\log D(s,a)-\log(1-D(s,a)).
+\]
+Optimal discriminator:
+\[
+D^*(s,a)=\frac{\rho_E(s,a)}{\rho_E(s,a)+\rho_\pi(s,a)}.
+\]
+
+\subsection*{14. Bandits, UCB, Thompson}
+Bandit value:
+\[
+Q(a)=\E[r\mid a],\quad V^*=\max_a Q(a).
+\]
+Regret:
+\[
+\mathcal R_T=TV^*-\sum_{k=0}^{T-1}Q(a_k)=\sum_a n_T(a)(V^*-Q(a)).
+\]
+Sample average:
+\[
+Q_k(a)=\frac{\sum_{i=0}^{k}r_i\1\{a_i=a\}}{\sum_{i=0}^{k}\1\{a_i=a\}},
+\quad Q_{k+1}(a)=Q_k(a)+\frac1{n_{k+1}(a)}(r_k-Q_k(a)).
+\]
+Nonstationary:
+\[
+Q_{k+1}(a)=Q_k(a)+\alpha(r_k-Q_k(a)).
+\]
+Hoeffding:
+\[
+\Prob(\mu\ge\hat\mu+u)\le e^{-2nu^2}.
+\]
+UCB:
+\[
+a_k=\argmax_a\left[Q_k(a)+c\sqrt{\frac{\log k}{n_k(a)}}\right].
+\]
+Lai-Robbins lower bound:
+\[
+\E\mathcal R_T\ge \log T\sum_{a\ne a^*}\frac{V^*-Q(a)}{\KL(p(\cdot\mid a)\Vert p(\cdot\mid a^*))}.
+\]
+Bayes update:
+\[
+p(\theta_a\mid r)\propto p(r\mid\theta_a)p(\theta_a).
+\]
+Thompson Sampling:
+\[
+\theta_a\sim p(\theta_a\mid\mathcal H_k),
+\quad a_k=\argmax_a \E[r\mid\theta_a].
+\]
+Bernoulli-Beta:
+\[
+r\sim\mathrm{Bernoulli}(\theta),
+\quad \theta\sim\mathrm{Beta}(\alpha,\beta),
+\]
+\[
+\theta\mid r\sim\mathrm{Beta}(\alpha+r,\beta+1-r),
+\quad \E\theta=\frac{\alpha}{\alpha+\beta}.
+\]
+
+\subsection*{15. MCTS}
+Planning objective:
+\[
+(a_0,a_1,\dots)^*\in\argmax_{a_0,a_1,\dots}\E[R(\tau)\mid s_0,a_0,a_1,\dots].
+\]
+Tree statistics:
+\[
+N(s),\quad N(s,a),\quad Q(s,a).
+\]
+UCT / tree policy:
+\[
+a=\argmax_a\left[Q(s,a)+C\sqrt{\frac{\log N(s)}{N(s,a)}}\right].
+\]
+MCTS cycle:
+\[
+\text{Selection}\to\text{Expansion}\to\text{Simulation}\to\text{Backpropagation}.
+\]
+MC backup:
+\[
+Q(s,a)\leftarrow Q(s,a)+\frac1{N(s,a)}(G-Q(s,a)),
+\quad N(s,a)\leftarrow N(s,a)+1.
+\]
+Policy from visits:
+\[
+\pi(a\mid s)\propto N(s,a)^{1/T}.
+\]
+AlphaZero-style PUCT:
+\[
+a=\argmax_a\left[Q(s,a)+c_{puct}P(s,a)\frac{\sqrt{N(s)}}{1+N(s,a)}\right].
+\]
+Value backup with neural value:
+\[
+G\approx V_\theta(s_{leaf})\quad\text{instead of random rollout}.
+\]
+
+\subsection*{16. LQR, iLQR, Model-based RL}
+Model-based loop:
+\[
+\cD\leftarrow\cD\cup\{(s,a,r,s')\},
+\quad \hat p_\theta(s',r\mid s,a)\ \text{train},
+\quad \pi\leftarrow\text{planner}(\hat p_\theta,r).
+\]
+Finite-horizon deterministic control:
+\[
+\max_{a_{0:T-1}}\sum_{t=0}^{T-1}r(s_t,a_t),
+\quad s_{t+1}=f(s_t,a_t).
+\]
+Direct differentiation:
+\[
+\nabla_{a_t}J=\frac{\partial r_t}{\partial a_t}+\sum_{k>t}\frac{\partial r_k}{\partial s_k}\frac{\partial s_k}{\partial a_t}.
+\]
+LQR dynamics/cost:
+\[
+x_{t+1}=Ax_t+Bu_t,
+\]
+\[
+J=\sum_{t=0}^{T-1}(x_t^\top Qx_t+u_t^\top Ru_t)+x_T^\top Q_f x_T.
+\]
+Riccati recursion:
+\[
+P_T=Q_f,
+\]
+\[
+K_t=(R+B^\top P_{t+1}B)^{-1}B^\top P_{t+1}A,
+\]
+\[
+P_t=Q+A^\top P_{t+1}A-A^\top P_{t+1}B(R+B^\top P_{t+1}B)^{-1}B^\top P_{t+1}A.
+\]
+Optimal control:
+\[
+u_t^*=-K_t x_t.
+\]
+iLQR local approximations:
+\[
+x_{t+1}\approx f_t+F_x\delta x_t+F_u\delta u_t,
+\]
+\[
+\begin{aligned}
+\ell(x,u)&\approx \ell_0+\ell_x^\top\delta x+\ell_u^\top\delta u+
+\tfrac12\delta x^\top\ell_{xx}\delta x+\tfrac12\delta u^\top\ell_{uu}\delta u+\delta u^\top\ell_{ux}\delta x.
+\end{aligned}
+\]
+Backward pass:
+\[
+Q_u=\ell_u+F_u^\top V'_x,
+\quad Q_{uu}=\ell_{uu}+F_u^\top V'_{xx}F_u,
+\quad Q_{ux}=\ell_{ux}+F_u^\top V'_{xx}F_x,
+\]
+\[
+k_t=-Q_{uu}^{-1}Q_u,
+\quad K_t=-Q_{uu}^{-1}Q_{ux}.
+\]
+Forward pass:
+\[
+u_t^{new}=u_t+\alpha k_t+K_t(x_t^{new}-x_t).
+\]
+Stochastic model training:
+\[
+\max_\theta\sum_{(s,a,s')\in\cD}\log p_\theta(s'\mid s,a).
+\]
+
+\end{multicols*}
+\end{document}
